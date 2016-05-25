@@ -18,7 +18,7 @@ const mergeStream = require('merge-stream');
 const mocha = require('gulp-mocha');
 const path = require('path');
 const runSeq = require('run-sequence');
-const tslint = require("gulp-tslint");
+const tslint = require('gulp-tslint');
 const typescript = require('gulp-typescript');
 const typings = require('gulp-typings');
 
@@ -75,7 +75,7 @@ gulp.task('depcheck', () => new Promise((resolve, reject) => {
     }
 
     if (result.dependencies.length) {
-      console.log('Unused dependencies:', unused.dependencies);
+      console.log('Unused dependencies:', result.dependencies);
       reject(new Error('Unused dependencies'));
       return;
     }
