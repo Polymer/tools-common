@@ -38,7 +38,7 @@ module.exports.depcheck = function depcheck(gulp, options) {
 
   task(gulp, 'depcheck', () => {
     return new Promise((resolve, reject) => {
-      depcheck_lib(__dirname, {ignoreDirs: []}, resolve);
+      depcheck_lib(process.cwd(), {ignoreDirs: []}, resolve);
     }).then((result) => {
       const invalidFiles = Object.keys(result.invalidFiles) || [];
       const invalidJsFiles = invalidFiles.filter((f) => f.endsWith('.js'));
