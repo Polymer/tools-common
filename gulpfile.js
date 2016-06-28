@@ -78,13 +78,28 @@ module.exports.tslint = function(gulp, options) {
         .pipe(tslint_lib.report('verbose')));
 }
 
+function getEslintConfig() {
+  var placesToLook = [
+    process.cwd(),
+    __dirname,
+  ];
+  for (const directory of placesToLook) {
+    try {
+      return JSON.parse(
+          fs.readFileSync(path.join(directory, '.eslintrc.json'), 'utf-8'));
+    } catch (error) { /* don't care */ }
+  }
+  throw new Error('Could not find a .eslintrc.json. This should never happen.');
+}
+
 module.exports.eslint = function(gulp, options) {
   const eslint_lib = require('gulp-eslint');
   const defaultOptions = {jsSrcs: gulp.src(['test/**/*.js', 'gulpfile.js'])};
   options = Object.assign({}, defaultOptions, options);
+  const eslintConfig = getEslintConfig();
   task(gulp, 'eslint', () =>
       options.jsSrcs
-        .pipe(eslint_lib())
+        .pipe(eslint_lib(eslintConfig))
         .pipe(eslint_lib.format())
         .pipe(eslint_lib.failAfterError()));
 }
