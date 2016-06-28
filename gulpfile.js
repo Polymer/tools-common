@@ -67,18 +67,7 @@ module.exports.lint = function(gulp, options) {
   task(gulp, 'lint', ['tslint', 'eslint', 'depcheck']);
 }
 
-module.exports.tslint = function(gulp, options) {
-  const defaultOptions = {tsSrcs: gulp.src('src/**/*.ts')};
-  options = Object.assign({}, defaultOptions, options);
-  task(gulp, 'tslint', () =>
-      options.tsSrcs
-        .pipe(tslint_lib({
-          configuration: 'tslint.json',
-        }))
-        .pipe(tslint_lib.report('verbose')));
-}
-
-function getEslintConfig() {
+function getJsonConfig(filename) {
   var placesToLook = [
     process.cwd(),
     __dirname,
@@ -86,17 +75,29 @@ function getEslintConfig() {
   for (const directory of placesToLook) {
     try {
       return JSON.parse(
-          fs.readFileSync(path.join(directory, '.eslintrc.json'), 'utf-8'));
+          fs.readFileSync(path.join(directory, filename), 'utf-8'));
     } catch (error) { /* don't care */ }
   }
   throw new Error('Could not find a .eslintrc.json. This should never happen.');
+}
+
+module.exports.tslint = function(gulp, options) {
+  const defaultOptions = {tsSrcs: gulp.src('src/**/*.ts')};
+  options = Object.assign({}, defaultOptions, options);
+  const tslintConfig = getJsonConfig('tslint.json');
+  task(gulp, 'tslint', () =>
+      options.tsSrcs
+        .pipe(tslint_lib({
+          configuration: tslintConfig,
+        }))
+        .pipe(tslint_lib.report('verbose')));
 }
 
 module.exports.eslint = function(gulp, options) {
   const eslint_lib = require('gulp-eslint');
   const defaultOptions = {jsSrcs: gulp.src(['test/**/*.js', 'gulpfile.js'])};
   options = Object.assign({}, defaultOptions, options);
-  const eslintConfig = getEslintConfig();
+  const eslintConfig = getJsonConfig('.eslintrc.json');
   task(gulp, 'eslint', () =>
       options.jsSrcs
         .pipe(eslint_lib(eslintConfig))
