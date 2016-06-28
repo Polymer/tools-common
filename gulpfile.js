@@ -10,19 +10,16 @@
 
 'use strict';
 
-const depcheck_lib = require('depcheck');
-const eslint_lib = require('gulp-eslint');
 const fs = require('fs-extra');
-const gulp = require('gulp');
 const mergeStream = require('merge-stream');
 const mocha = require('gulp-mocha');
 const path = require('path');
-const runSeq = require('run-sequence');
+const runSeqBase = require('run-sequence');
 const tslint_lib = require("gulp-tslint");
 const typescript = require('gulp-typescript');
 const typings = require('gulp-typings');
 
-function task(name, deps, impl) {
+function task(gulp, name, deps, impl) {
   if (gulp.hasTask(name)) {
     throw new Error(
         `A task with the name ${JSON.stringify(name)} already exists!`);
@@ -30,15 +27,16 @@ function task(name, deps, impl) {
   gulp.task(name, deps, impl);
 }
 
-module.exports.init = function() {
-  task('init', () => gulp.src("./typings.json").pipe(typings()));
+module.exports.init = function(gulp) {
+  task(gulp, 'init', () => gulp.src("./typings.json").pipe(typings()));
 }
 
-module.exports.depcheck = function depcheck(options) {
+module.exports.depcheck = function depcheck(gulp, options) {
+  const depcheck_lib = require('depcheck');
   const defaultOptions = {stickyDeps: new Set()};
   options = Object.assign({}, defaultOptions, options);
 
-  task('depcheck', () => {
+  task(gulp, 'depcheck', () => {
     return new Promise((resolve, reject) => {
       depcheck_lib(__dirname, {ignoreDirs: []}, resolve);
     }).then((result) => {
@@ -62,17 +60,17 @@ module.exports.depcheck = function depcheck(options) {
   });
 }
 
-module.exports.lint = function(options) {
-  module.exports.tslint(options);
-  module.exports.eslint_lib(options);
-  module.exports.depcheck(options);
-  task('lint', ['tslint', 'eslint', 'depcheck']);
+module.exports.lint = function(gulp, options) {
+  module.exports.tslint(gulp, options);
+  module.exports.eslint(gulp, options);
+  module.exports.depcheck(gulp, options);
+  task(gulp, 'lint', ['tslint', 'eslint', 'depcheck']);
 }
 
-module.exports.tslint = function(options) {
+module.exports.tslint = function(gulp, options) {
   const defaultOptions = {tsSrcs: gulp.src('src/**/*.ts')};
   options = Object.assign({}, defaultOptions, options);
-  task('tslint', () =>
+  task(gulp, 'tslint', () =>
       options.tsSrcs
         .pipe(tslint_lib({
           configuration: 'tslint.json',
@@ -80,26 +78,27 @@ module.exports.tslint = function(options) {
         .pipe(tslint_lib.report('verbose')));
 }
 
-module.exports.eslint = function(options) {
-  const defaultOptions = {jsSrcs: gulp.src('test/**/*.js')};
+module.exports.eslint = function(gulp, options) {
+  const eslint_lib = require('gulp-eslint');
+  const defaultOptions = {jsSrcs: gulp.src(['test/**/*.js', 'gulpfile.js'])};
   options = Object.assign({}, defaultOptions, options);
-  task('eslint', () =>
+  task(gulp, 'eslint', () =>
       options.jsSrcs
-        .pipe(eslint())
-        .pipe(eslint.format())
-        .pipe(eslint.failAfterError()));
+        .pipe(eslint_lib())
+        .pipe(eslint_lib.format())
+        .pipe(eslint_lib.failAfterError()));
 }
 
-module.exports.build = function(options) {
+module.exports.build = function(gulp, options) {
   const defaultOptions = {
     tsSrcs: gulp.src('src/**/*.ts'),
-    dataSrcs: gulp.src(['src/**/*', '!src/**/*.ts'])
+    dataSrcs: gulp.src(['src/**/*', '!src/**/*.ts']),
   };
   options = Object.assign({}, defaultOptions, options);
 
   const tsProject = typescript.createProject('tsconfig.json');
 
-  task('build', () =>
+  task(gulp, 'build', () =>
     mergeStream(
       options.tsSrcs.pipe(typescript(tsProject)),
       options.dataSrcs
@@ -107,37 +106,42 @@ module.exports.build = function(options) {
   );
 }
 
-module.exports.clean = function(options) {
-  const defaultOptions = {buildArtifacts: ['lib']};
+module.exports.clean = function(gulp, options) {
+  const defaultOptions = {buildArtifacts: ['lib/', 'typings/']};
   options = Object.assign({}, defaultOptions, options);
 
-  task('clean', () => {
+  task(gulp, 'clean', () => {
     for (const buildArtifact of options.buildArtifacts) {
-      fs.removeSync(path.join(__dirname, buildArtifact));
+      fs.removeSync(path.join(process.cwd(), buildArtifact));
     }
   });
 }
 
 
-module.exports.buildAll = function(options) {
-  module.exports.clean(options);
-  module.exports.init(options);
-  module.exports.lint(options);
-  module.exports.build(options);
+module.exports.buildAll = function(gulp, options) {
+  module.exports.clean(gulp, options);
+  module.exports.init(gulp, options);
+  module.exports.lint(gulp, options);
+  module.exports.build(gulp, options);
 
-  task('build-all', (done) => {
-    runSeq('clean', 'init', 'lint', 'build', done);
+  task(gulp, 'build-all', (done) => {
+    runSeqBase.use(gulp)('clean', 'init', 'lint', 'build', done);
   });
 }
 
-module.exports.test = function(options) {
-  module.exports.buildAll(options);
+module.exports.test = function(gulp, options) {
+  module.exports.buildAll(gulp, options);
 
-  task('test', ['build'], () =>
+  task(gulp, 'test', ['build'], () =>
     gulp.src('test/**/*_test.js', {read: false})
         .pipe(mocha({
           ui: 'tdd',
           reporter: 'spec',
         }))
   );
+}
+
+if (__dirname === process.cwd()) {
+  const gulp = require('gulp');
+  module.exports.test(gulp);
 }
