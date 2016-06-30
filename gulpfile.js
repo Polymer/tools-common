@@ -157,6 +157,8 @@ module.exports.test = function(gulp, options) {
   );
 }
 
+// If this gulpfile is being loaded for the tools-common repo itself, rather
+// than being used as a library...
 if (__dirname === process.cwd()) {
   const gulp = require('gulp');
   module.exports.test(gulp);
