@@ -38,6 +38,8 @@ module.exports.depcheck = function depcheck(gulp, options) {
 
   task(gulp, 'depcheck', () => {
     return new Promise((resolve, reject) => {
+      // Note that process.cwd() in a gulp task is the directory of the
+      // running gulpfile. See e.g. https://github.com/gulpjs/gulp/issues/523
       depcheck_lib(process.cwd(), {ignoreDirs: []}, resolve);
     }).then((result) => {
       const invalidFiles = Object.keys(result.invalidFiles) || [];
