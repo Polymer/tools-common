@@ -25,6 +25,9 @@
     "run-sequence": "^1.2.0",
     "tslint": "^3.10.2"
   },
+  "peerDependencies": {
+    "gulp": "^3.9.1"
+  },
   "devDependencies": {
     "gulp": "^3.9.1"
   }
