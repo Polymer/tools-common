@@ -12,10 +12,10 @@
 
 const gulp = require('gulp');
 const toolsCommon = require('./gulp-tasks');
-// Use this instead in other repos:
+// Use this instead when you copy-paste this file into other repos:
 // const toolsCommon = require('tools-common/gulp-tasks');
 
-toolsCommon.test({
+toolsCommon.generateCompleteTaskgraph({
   // What will get deleted when gulp clean is run
   buildArtifacts: ['lib/', 'typings/'],
 

@@ -11,14 +11,14 @@
 'use strict';
 
 const fs = require('fs-extra');
-const mergeStream = require('merge-stream');
+const gulp = require('gulp');
 const mocha = require('gulp-mocha');
-const path = require('path');
-const runSeqBase = require('run-sequence');
-const tslint_lib = require("gulp-tslint");
+const tslint_lib = require('gulp-tslint');
 const typescript = require('gulp-typescript');
 const typings = require('gulp-typings');
-const gulp = require('gulp');
+const mergeStream = require('merge-stream');
+const path = require('path');
+const runSequence = require('run-sequence');
 
 function task(name, deps, impl) {
   if (gulp.hasTask(name)) {
@@ -29,7 +29,7 @@ function task(name, deps, impl) {
 }
 
 module.exports.init = function() {
-  task('init', () => gulp.src("./typings.json").pipe(typings()));
+  task('init', () => gulp.src('./typings.json').pipe(typings()));
 }
 
 module.exports.depcheck = function depcheck(options) {
@@ -144,7 +144,7 @@ module.exports.buildAll = function(options) {
   module.exports.build(options);
 
   task('build-all', (done) => {
-    runSeqBase.use(gulp)('clean', 'init', 'lint', 'build', done);
+    runSequence('clean', 'init', 'lint', 'build', done);
   });
 }
 
@@ -158,4 +158,8 @@ module.exports.test = function(options) {
           reporter: 'spec',
         }))
   );
+}
+
+module.exports.generateCompleteTaskgraph = function(options) {
+  module.exports.test(options);
 }
