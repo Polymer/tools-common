@@ -6,12 +6,7 @@
     "node": ">=4.0"
   },
   "scripts": {
-    "lint": "gulp lint",
-    "init": "gulp init",
-    "build": "gulp build",
-    "test": "gulp test",
-    "prepublish": "gulp build-all",
-    "format": "find src/ test/ -iname '*.ts' -o -iname '*.js' | xargs clang-format --style=file -i"
+    "prepublish": "tsc && gulp lint"
   },
   "main": "gulp-tasks.js",
   "typings": "gulp-tasks.d.ts",
